@@ -1,1 +1,1042 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURTAC — Adaptiv Trafik İdarəetmə Sistemi</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap');
+:root {
+  --bg:#080c10;--panel:#0c1118;--panel2:#0f161e;--border:#18263a;--border2:#1e304a;
+  --accent:#00c8ff;--green:#00ff88;--red:#ff2d55;--yellow:#ffcb00;--purple:#b44fff;
+  --orange:#ff8800;--dim:#2e4560;--dim2:#3a5575;--white:#ddeeff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'JetBrains Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;gap:12px;}
+.logo{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;letter-spacing:4px;color:var(--accent);}
+.logo em{color:var(--green);font-style:normal;}
+.hstats{display:flex;gap:20px;font-size:10px;}
+.hstat{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hstat-val{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;}
+.hstat-lbl{color:var(--dim2);letter-spacing:1px;font-size:8px;}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--green);border:1px solid var(--green);padding:4px 10px;border-radius:20px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.main{display:flex;flex:1;min-height:0;overflow:hidden;}
+.side{width:200px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.side.right{border-right:none;border-left:1px solid var(--border);}
+.sblock{padding:12px;border-bottom:1px solid var(--border);}
+.stitle{font-size:9px;letter-spacing:2px;color:var(--dim2);text-transform:uppercase;margin-bottom:8px;font-family:'Orbitron',sans-serif;}
+.tl-box{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:10px;}
+.tl-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.tl-dir{font-size:9px;color:var(--dim2);width:22px;}
+.tl-bulbs{display:flex;gap:5px;}
+.tl-b{width:16px;height:16px;border-radius:50%;border:1.5px solid #222;transition:all .25s;}
+.on-r{background:var(--red);box-shadow:0 0 10px var(--red);border-color:var(--red);}
+.on-y{background:var(--yellow);box-shadow:0 0 10px var(--yellow);border-color:var(--yellow);}
+.on-g{background:var(--green);box-shadow:0 0 10px var(--green);border-color:var(--green);}
+.off-r{background:#2a0010;}.off-y{background:#2a1c00;}.off-g{background:#002a14;}
+.tl-count{font-size:9px;color:var(--dim2);margin-left:auto;}
+.tl-count b{color:var(--accent);}
+.tl-timer-wrap{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.tl-tmr{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
+.tl-tmr.g{color:var(--green);}.tl-tmr.y{color:var(--yellow);}.tl-tmr.r{color:var(--red);}
+.tl-phase{font-size:8px;color:var(--dim2);letter-spacing:1px;text-align:right;max-width:90px;line-height:1.4;}
+.ai-badge{font-size:8px;padding:2px 7px;border-radius:10px;margin-top:4px;display:inline-block;}
+.ai-badge.adaptive{background:rgba(0,200,255,.12);color:var(--accent);border:1px solid var(--accent);}
+.ai-badge.manual{background:rgba(255,200,0,.12);color:var(--yellow);border:1px solid var(--yellow);}
+.density-item{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.d-lbl{font-size:9px;color:var(--dim2);width:58px;white-space:nowrap;}
+.d-bar{flex:1;height:5px;background:#111d2a;border-radius:3px;overflow:hidden;}
+.d-fill{height:100%;border-radius:3px;transition:width .4s;}
+.d-val{font-size:9px;width:22px;text-align:right;font-weight:700;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.sbox{background:var(--panel2);border:1px solid var(--border2);border-radius:6px;padding:8px 6px;text-align:center;}
+.sbox-n{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;line-height:1;}
+.sbox-l{font-size:8px;color:var(--dim2);margin-top:2px;}
+.ai-log{background:var(--panel2);border:1px solid var(--border2);border-radius:6px;max-height:160px;overflow-y:auto;padding:6px;}
+.ai-entry{font-size:9px;display:flex;gap:5px;padding:3px 0;border-bottom:1px solid #111;line-height:1.4;}
+.ai-entry:last-child{border-bottom:none;}
+.ai-t{color:var(--dim2);white-space:nowrap;flex-shrink:0;}
+.ai-m.ok{color:var(--green);}.ai-m.warn{color:var(--yellow);}.ai-m.info{color:var(--accent);}.ai-m.ped{color:var(--purple);}
+.gps-strip{background:var(--panel2);border:1px solid var(--border2);border-radius:6px;padding:8px;}
+.gps-row{display:flex;justify-content:space-between;font-size:9px;padding:3px 0;border-bottom:1px solid #0e1824;}
+.gps-row:last-child{border-bottom:none;}
+.gps-k{color:var(--dim2);}
+.gps-v{font-weight:700;}
+.btn-grid{display:flex;flex-direction:column;gap:6px;}
+.btn{padding:7px 10px;border:1px solid var(--border2);background:var(--panel2);color:var(--white);font-family:'JetBrains Mono',monospace;font-size:9px;cursor:pointer;border-radius:5px;transition:all .2s;text-align:left;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.act{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.05);}
+.btn.warn-btn{border-color:var(--red);color:var(--red);}
+.btn.ped-btn{border-color:var(--purple);color:var(--purple);}
+.btn.yellow-btn{border-color:var(--yellow);color:var(--yellow);}
+.spd-row{display:flex;align-items:center;gap:8px;font-size:9px;color:var(--dim2);padding:0 4px;}
+input[type=range]{-webkit-appearance:none;flex:1;height:3px;background:var(--border2);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.spd-v{color:var(--accent);font-weight:700;min-width:24px;}
+.cv-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;gap:10px;}
+canvas{border:1px solid var(--border);border-radius:3px;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">12<em>B</em></div>
+  <div class="hstats">
+    <div class="hstat"><div class="hstat-val" id="h-total" style="color:var(--accent)">0</div><div class="hstat-lbl">KEÇƏN</div></div>
+    <div class="hstat"><div class="hstat-val" id="h-avg"   style="color:var(--yellow)">0s</div><div class="hstat-lbl">ORT.GÖZL</div></div>
+    <div class="hstat"><div class="hstat-val" id="h-flow"  style="color:var(--green)">0</div><div class="hstat-lbl">AXIN/DƏQ</div></div>
+    <div class="hstat"><div class="hstat-val" id="h-eff"   style="color:var(--purple)">--%</div><div class="hstat-lbl">SƏMƏRƏLİLİK</div></div>
+    <div class="hstat"><div class="hstat-val" id="h-ped"   style="color:var(--orange)">0</div><div class="hstat-lbl">PİYADA</div></div>
+  </div>
+  <div class="live-badge"><div class="dot"></div>DEMO</div>
+</header>
+<div class="main">
+<div class="side">
+  <div class="sblock">
+    <div class="stitle">İşıqfor Vəziyyəti</div>
+    <div class="tl-box">
+      <div class="tl-row">
+        <div class="tl-dir">N↕S</div>
+        <div class="tl-bulbs">
+          <div class="tl-b off-r" id="tl-ns-r"></div>
+          <div class="tl-b off-y" id="tl-ns-y"></div>
+          <div class="tl-b off-g" id="tl-ns-g"></div>
+        </div>
+        <div class="tl-count">Sıxlıq: <b id="tl-ns-cnt">0</b></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dir">E↔W</div>
+        <div class="tl-bulbs">
+          <div class="tl-b off-r" id="tl-ew-r"></div>
+          <div class="tl-b off-y" id="tl-ew-y"></div>
+          <div class="tl-b off-g" id="tl-ew-g"></div>
+        </div>
+        <div class="tl-count">Sıxlıq: <b id="tl-ew-cnt">0</b></div>
+      </div>
+      <div class="tl-row" style="margin-bottom:0">
+        <div class="tl-dir" style="color:var(--purple)">PED</div>
+        <div class="tl-bulbs">
+          <div class="tl-b on-r" id="tl-ped-r"></div>
+          <div class="tl-b off-g" id="tl-ped-g"></div>
+        </div>
+        <div class="tl-count">Gözl: <b id="tl-ped-cnt">0</b></div>
+      </div>
+      <div class="tl-timer-wrap">
+        <div class="tl-tmr g" id="tl-tmr">--</div>
+        <div>
+          <div class="tl-phase" id="tl-phase">--</div>
+          <div><span class="ai-badge adaptive" id="ai-mode-badge">AI-ADAPTİV</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">Şerit Sıxlığı</div>
+    <div id="density-bars"></div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">Aktiv Sayğac</div>
+    <div class="stat-grid">
+      <div class="sbox"><div class="sbox-n" style="color:var(--green)"  id="s-veh">0</div><div class="sbox-l">MAŞIN</div></div>
+      <div class="sbox"><div class="sbox-n" style="color:var(--purple)" id="s-ped">0</div><div class="sbox-l">PİYADA</div></div>
+      <div class="sbox"><div class="sbox-n" style="color:var(--red)"    id="s-wait">0</div><div class="sbox-l">GÖZLƏYİR</div></div>
+      <div class="sbox"><div class="sbox-n" style="color:var(--accent)" id="s-thru">0</div><div class="sbox-l">KEÇƏN/DƏQ</div></div>
+    </div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">GPS Axın</div>
+    <div class="gps-strip">
+      <div class="gps-row"><span class="gps-k">Şimal</span><span class="gps-v" id="gps-n" style="color:var(--green)">0</span></div>
+      <div class="gps-row"><span class="gps-k">Cənub</span><span class="gps-v" id="gps-s" style="color:var(--green)">0</span></div>
+      <div class="gps-row"><span class="gps-k">Şərq</span><span class="gps-v" id="gps-e" style="color:var(--accent)">0</span></div>
+      <div class="gps-row"><span class="gps-k">Qərb</span><span class="gps-v" id="gps-w" style="color:var(--accent)">0</span></div>
+      <div class="gps-row"><span class="gps-k">Növbəti faz</span><span class="gps-v" id="gps-next" style="color:var(--yellow)">--</span></div>
+    </div>
+  </div>
+</div>
+<div class="cv-wrap">
+  <canvas id="sim" width="660" height="540"></canvas>
+  <div class="spd-row">
+    <span>SÜRƏTİ:</span>
+    <input type="range" min="0.5" max="5" step="0.5" value="1" id="spd">
+    <span class="spd-v" id="spd-v">1×</span>
+    <span style="margin-left:14px;color:var(--dim2)">REJIM:</span>
+    <span id="sim-mode-lbl" style="color:var(--green);font-weight:700;margin-left:4px">CANLI</span>
+  </div>
+</div>
+<div class="side right">
+  <div class="sblock">
+    <div class="stitle">Nəzarət</div>
+    <div class="btn-grid">
+      <button class="btn act" id="btn-tog" onclick="toggleSim()">■ DAYANDIRMAQ</button>
+      <button class="btn" onclick="resetSim()">↺  SİFİRLA</button>
+      <button class="btn act" onclick="setAIMode(true)"  id="btn-ai">🤖 AI-ADAPTİV</button>
+      <button class="btn" onclick="setAIMode(false)" id="btn-man">✋ ƏL İLƏ</button>
+    </div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">Əl İlə Faz</div>
+    <div class="btn-grid">
+      <button class="btn" onclick="manualPhase('NS_GREEN')">↕ Şimal-Cənub YAŞ</button>
+      <button class="btn" onclick="manualPhase('EW_GREEN')">↔ Şərq-Qərb YAŞ</button>
+    </div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">Piyada Sensorları</div>
+    <div class="gps-strip">
+      <div class="gps-row"><span class="gps-k">Şimal zebra</span><span class="gps-v" id="ped-det-n" style="color:var(--dim2)">BOŞ</span></div>
+      <div class="gps-row"><span class="gps-k">Cənub zebra</span><span class="gps-v" id="ped-det-s" style="color:var(--dim2)">BOŞ</span></div>
+      <div class="gps-row"><span class="gps-k">Şərq zebra</span><span class="gps-v" id="ped-det-e" style="color:var(--dim2)">BOŞ</span></div>
+      <div class="gps-row"><span class="gps-k">Qərb zebra</span><span class="gps-v" id="ped-det-w" style="color:var(--dim2)">BOŞ</span></div>
+      <div class="gps-row"><span class="gps-k">Gözləyən</span><span class="gps-v" id="ped-total-wait" style="color:var(--purple)">0</span></div>
+    </div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">AI Qərar Jurnalı</div>
+    <div class="ai-log" id="ai-log">
+      <div class="ai-entry"><span class="ai-t">00:00</span><span class="ai-m info">Sistem işə salındı</span></div>
+    </div>
+  </div>
+  <div class="sblock">
+    <div class="stitle">Faz Müddəti (AI)</div>
+    <div class="gps-strip">
+      <div class="gps-row"><span class="gps-k">NS müddət</span><span class="gps-v" id="dur-ns" style="color:var(--green)">--s</span></div>
+      <div class="gps-row"><span class="gps-k">EW müddət</span><span class="gps-v" id="dur-ew" style="color:var(--accent)">--s</span></div>
+      <div class="gps-row"><span class="gps-k">Piyada müddət</span><span class="gps-v" id="dur-ped" style="color:var(--purple)">--s</span></div>
+    </div>
+  </div>
+</div>
+</div>
 
+<script>
+// ══════════════════════════════════════════
+// SURTAC — Adaptiv Trafik Simulyasiyası
+// ══════════════════════════════════════════
+
+const canvas = document.getElementById('sim');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const CX = W/2, CY = H/2;
+
+// Yol ölçüləri
+const RW = 96;   // yolun eni (hər istiqamət üçün 2 şerit = 48px şerit)
+const LW = RW/2; // bir şeritin eni
+const SW = 30;   // kaldırım eni
+const CW = 22;   // zebra dərinliyi
+
+// ──── SİMULYASİYA VƏZİYYƏTİ ────
+let phase       = 'NS_GREEN';
+let phaseTimer  = 30;
+let aiMode      = true;
+let simRunning  = true;
+let simSpeed    = 1;
+let lastT       = null;
+let simTime     = 0;
+
+// Statistika
+let totalPassed = 0, totalPed = 0;
+let flowLog = [], allWaitLog = [], pedWaitLog = [];
+
+// AI tənzimləmə
+let nsDuration = 20, ewDuration = 20, pedDuration = 12;
+let pedRequestTimer = 0;
+const PED_WAIT_MAX = 15; // saniyə — piyada bu qədər gözlədikdən sonra faz verilir
+
+// Obyektlər
+let vehicles = [], pedList = [];
+let objId = 0;
+
+// Spawn taymerləri
+let spawnT = 0, pedSpawnT = 0;
+
+// ──── MAŞIN İSTİQAMƏT KONFİQURASİYASI ────
+// ax: hərəkət oxu ('x' və ya 'y')
+// sign: istiqamət (+1 və ya -1)
+// baseX/baseY: spawn koordinatı
+// stopLine: dayanma xəttinin koordinatı
+// exitX/exitY: çıxış koordinatı
+const DCONF = {
+  N_S: {
+    ax:'y', sign: 1,
+    baseX: () => CX - LW * 0.5,
+    baseY: () => -32,
+    stopLine: CY - RW/2 - 4,
+    exitY:    () => H + 32
+  },
+  S_N: {
+    ax:'y', sign:-1,
+    baseX: () => CX + LW * 0.5,
+    baseY: () => H + 32,
+    stopLine: CY + RW/2 + 4,
+    exitY:    () => -32
+  },
+  E_W: {
+    ax:'x', sign:-1,
+    baseX: () => W + 32,
+    baseY: () => CY - LW * 0.5,
+    stopLine: CX + RW/2 + 4,
+    exitX:    () => -32
+  },
+  W_E: {
+    ax:'x', sign: 1,
+    baseX: () => -32,
+    baseY: () => CY + LW * 0.5,
+    stopLine: CX - RW/2 - 4,
+    exitX:    () => W + 32
+  }
+};
+
+// ──── PİYADA ZEBRA KONFİQURASİYASI ────
+// 4 zebra × 2 istiqamət = 8 keçid yolu
+//
+// Şimal zebra: y aralığı [CY-RW/2-CW .. CY-RW/2], piyadalar x-də gedir
+//   Zebrranın ortası: y = CY - RW/2 - CW/2
+// Cənub zebra: y aralığı [CY+RW/2 .. CY+RW/2+CW]
+//   Zebrranın ortası: y = CY + RW/2 + CW/2
+// Qərb zebra: x aralığı [CX-RW/2-CW .. CX-RW/2], piyadalar y-də gedir
+//   Zebrranın ortası: x = CX - RW/2 - CW/2
+// Şərq zebra: x aralığı [CX+RW/2 .. CX+RW/2+CW]
+//   Zebrranın ortası: x = CX + RW/2 + CW/2
+
+const PCFG = [
+  // ── Şimal zebra (y = CY-RW/2-CW/2 sabit) ──
+  { id:'N_WE', label:'N', dir:'x', sign: 1,
+    fixedCoord: () => CY - RW/2 - CW/2,          // sabit y
+    spawnCoord: () => CX - RW/2 - SW * 0.6,      // başlanğıc x
+    exitCoord:  () => CX + RW/2 + SW * 0.6,      // son x
+    waitEdge:   () => CX - RW/2 - 2               // yolun sol kənarı
+  },
+  { id:'N_EW', label:'N', dir:'x', sign:-1,
+    fixedCoord: () => CY - RW/2 - CW/2,
+    spawnCoord: () => CX + RW/2 + SW * 0.6,
+    exitCoord:  () => CX - RW/2 - SW * 0.6,
+    waitEdge:   () => CX + RW/2 + 2
+  },
+  // ── Cənub zebra (y = CY+RW/2+CW/2 sabit) ──
+  { id:'S_WE', label:'S', dir:'x', sign: 1,
+    fixedCoord: () => CY + RW/2 + CW/2,
+    spawnCoord: () => CX - RW/2 - SW * 0.6,
+    exitCoord:  () => CX + RW/2 + SW * 0.6,
+    waitEdge:   () => CX - RW/2 - 2
+  },
+  { id:'S_EW', label:'S', dir:'x', sign:-1,
+    fixedCoord: () => CY + RW/2 + CW/2,
+    spawnCoord: () => CX + RW/2 + SW * 0.6,
+    exitCoord:  () => CX - RW/2 - SW * 0.6,
+    waitEdge:   () => CX + RW/2 + 2
+  },
+  // ── Qərb zebra (x = CX-RW/2-CW/2 sabit) ──
+  { id:'W_NS', label:'W', dir:'y', sign: 1,
+    fixedCoord: () => CX - RW/2 - CW/2,          // sabit x
+    spawnCoord: () => CY - RW/2 - SW * 0.6,      // başlanğıc y
+    exitCoord:  () => CY + RW/2 + SW * 0.6,      // son y
+    waitEdge:   () => CY - RW/2 - 2               // yolun yuxarı kənarı
+  },
+  { id:'W_SN', label:'W', dir:'y', sign:-1,
+    fixedCoord: () => CX - RW/2 - CW/2,
+    spawnCoord: () => CY + RW/2 + SW * 0.6,
+    exitCoord:  () => CY - RW/2 - SW * 0.6,
+    waitEdge:   () => CY + RW/2 + 2
+  },
+  // ── Şərq zebra (x = CX+RW/2+CW/2 sabit) ──
+  { id:'E_NS', label:'E', dir:'y', sign: 1,
+    fixedCoord: () => CX + RW/2 + CW/2,
+    spawnCoord: () => CY - RW/2 - SW * 0.6,
+    exitCoord:  () => CY + RW/2 + SW * 0.6,
+    waitEdge:   () => CY - RW/2 - 2
+  },
+  { id:'E_SN', label:'E', dir:'y', sign:-1,
+    fixedCoord: () => CX + RW/2 + CW/2,
+    spawnCoord: () => CY + RW/2 + SW * 0.6,
+    exitCoord:  () => CY - RW/2 - SW * 0.6,
+    waitEdge:   () => CY + RW/2 + 2
+  }
+];
+
+// ──── FAZ ADLARI ────
+const PNAMES = {
+  NS_GREEN:'N↕S Yaşıl', NS_YELLOW:'N↕S Sarı',
+  EW_GREEN:'E↔W Yaşıl', EW_YELLOW:'E↔W Sarı'
+};
+
+// ──── KÖMƏKÇI FUNKSİYALAR ────
+function canVehicleGo(dir) {
+  // Heç bir halda maşınların hərəkətini məhdudlaşdırma
+  const isNS = (dir === 'N_S' || dir === 'S_N');
+  return isNS ? (phase === 'NS_GREEN') : (phase === 'EW_GREEN');
+}
+
+// ──── AI MÜHƏRRİKİ ────
+function aiDecide() {
+  const nsV = vehicles.filter(v => (v.dir==='N_S'||v.dir==='S_N') && !v.inInt).length;
+  const ewV = vehicles.filter(v => (v.dir==='E_W'||v.dir==='W_E') && !v.inInt).length;
+  const pw  = pedList.filter(p => p.waiting).length;
+  nsDuration = Math.min(30, Math.max(10, 12 + nsV * 3));
+  ewDuration  = Math.min(30, Math.max(10, 12 + ewV * 3));
+  pedDuration = Math.min(20, Math.max(8,   8 + pw  * 2));
+  return { nsV, ewV, pw };
+}
+
+function checkTrafficJam() {
+  if (phase === 'NS_GREEN') {
+    const ewV = vehicles.filter(v => (v.dir==='E_W'||v.dir==='W_E') && !v.inInt).length;
+    if (ewV >= 7 && phaseTimer > 3) {
+      phaseTimer = 3;
+      addLog(`Tıxac: Üfüqi yolda ${ewV} maşın, Şaquli 3s`, 'warn');
+    }
+  }
+  else if (phase === 'EW_GREEN') {
+    const nsV = vehicles.filter(v => (v.dir==='N_S'||v.dir==='S_N') && !v.inInt).length;
+    if (nsV >= 7 && phaseTimer > 3) {
+      phaseTimer = 3;
+      addLog(`Tıxac: Şaquli yolda ${nsV} maşın, Üfüqi 3s`, 'warn');
+    }
+  }
+}
+
+function advancePhase() {
+  const info = aiDecide();
+  let next, dur;
+
+  if (!aiMode) {
+    const seq  = { NS_GREEN:'EW_GREEN', EW_GREEN:'NS_GREEN' };
+    const durs = { NS_GREEN:30, EW_GREEN:30 };
+    next = seq[phase] || 'NS_GREEN';
+    dur  = durs[next] || 5;
+  } else {
+    if      (phase === 'NS_GREEN') {
+      if (info.pw > 0 && pedRequestTimer > PED_WAIT_MAX) { next = 'EW_GREEN'; dur = ewDuration; }
+      else { next = 'EW_GREEN'; dur = ewDuration; }
+    }
+    else if (phase === 'EW_GREEN') {
+      if (info.pw > 0 && pedRequestTimer > PED_WAIT_MAX) { next = 'NS_GREEN'; dur = nsDuration; }
+      else {
+        next = (info.nsV >= info.ewV) ? 'NS_GREEN' : 'EW_GREEN';
+        dur  = (info.nsV >= info.ewV) ? nsDuration  : ewDuration;
+      }
+    }
+    else { next = 'NS_GREEN'; dur = nsDuration; }
+  }
+
+  const prev = phase;
+  phase = next;
+  phaseTimer = dur;
+
+  if (prev !== phase) {
+    const tp = phase.includes('GREEN') ? 'ok' : 'warn';
+    addLog(`Faz: ${PNAMES[phase]} (${Math.round(dur)}s)`, tp);
+    if (aiMode && (phase==='NS_GREEN'||phase==='EW_GREEN')) {
+      const cnt = (phase==='NS_GREEN') ? info.nsV : info.ewV;
+      addLog(`AI: ${phase==='NS_GREEN'?'N↕S':'E↔W'} seçildi (${cnt} maşın)`, 'info');
+    }
+  }
+}
+
+// ──── SPAWN ────
+function spawnVeh() {
+  const dirs = ['N_S','S_N','E_W','W_E'];
+  const dk   = dirs[Math.floor(Math.random() * 4)];
+  const dc   = DCONF[dk];
+  const sx   = dc.baseX() + (Math.random() - .5) * 6;
+  const sy   = dc.baseY();
+  // Toqquşma yoxlaması
+  for (const ev of vehicles) {
+    if (Math.hypot(ev.x - sx, ev.y - sy) < 36) return;
+  }
+  const cols = ['#d4aa60','#6090c8','#b86060','#60b890','#9090c8','#c8906a','#80c080'];
+  vehicles.push({
+    id: objId++, dir: dk,
+    col: cols[Math.floor(Math.random() * cols.length)],
+    speed: 1.1 + Math.random() * .7,
+    w: 20, h: 11,
+    x: sx, y: sy,
+    waiting: false, inInt: false, passed: false, waitAcc: 0
+  });
+}
+
+function spawnPed() {
+  const ci = Math.floor(Math.random() * PCFG.length);
+  const cr = PCFG[ci];
+  // fixedCoord = zebrranın sabit oxundakı koordinat
+  // spawnCoord = piyadanın başladığı yer (hərəkət oxunda)
+  let px, py;
+  if (cr.dir === 'x') {
+    px = cr.spawnCoord();   // başlanğıc x
+    py = cr.fixedCoord();   // zebrranın y oxunda sabit
+  } else {
+    px = cr.fixedCoord();   // zebrranın x oxunda sabit
+    py = cr.spawnCoord();   // başlanğıc y
+  }
+  // Yaxınlıqda başqa piyada varsa spawn etmə
+  for (const ep of pedList) {
+    if (Math.hypot(ep.x - px, ep.y - py) < 20) return;
+  }
+  pedList.push({
+    id: objId++,
+    label: cr.label,
+    dir:   cr.dir,
+    sign:  cr.sign,
+    x: px, y: py,
+    fixedVal:  cr.fixedCoord(),  // zebrrada sabit qalacaq koordinat
+    waitEdge:  cr.waitEdge(),    // gözləmə nöqtəsi (yolun kənarı)
+    exitCoord: cr.exitCoord(),   // çıxış koordinatı
+    speed:   .5 + Math.random() * .35,
+    waiting: false, passed: false, waitAcc: 0
+  });
+}
+
+// ──── MAŞIN YENİLƏNMƏSİ ────
+function updateVehicles(dt) {
+  const s0 = simSpeed * dt * 60;
+  for (const v of vehicles) {
+    const dc  = DCONF[v.dir];
+    const go  = canVehicleGo(v.dir);
+    const spd = v.speed * s0;
+
+    // Öndəki maşını yoxla
+    let blocked = false;
+    for (const ov of vehicles) {
+      if (ov === v || ov.dir !== v.dir) continue;
+      if (dc.ax === 'y') {
+        const ahead = dc.sign > 0 ? (ov.y > v.y && ov.y - v.y < 32) : (ov.y < v.y && v.y - ov.y < 32);
+        if (ahead) { blocked = true; break; }
+      } else {
+        const ahead = dc.sign > 0 ? (ov.x > v.x && ov.x - v.x < 32) : (ov.x < v.x && v.x - ov.x < 32);
+        if (ahead) { blocked = true; break; }
+      }
+    }
+
+    // Dayanma xəttinə yaxındırmı?
+    let atStop = false;
+    if (dc.ax === 'y') {
+      atStop = dc.sign > 0
+        ? (v.y < dc.stopLine - 2  && v.y > dc.stopLine - 55)
+        : (v.y > dc.stopLine + 2  && v.y < dc.stopLine + 55);
+    } else {
+      atStop = dc.sign > 0
+        ? (v.x < dc.stopLine - 2  && v.x > dc.stopLine - 55)
+        : (v.x > dc.stopLine + 2  && v.x < dc.stopLine + 55);
+    }
+
+    v.waiting = (!go && atStop && !blocked);
+    if (v.waiting) v.waitAcc += dt;
+    v.inInt = (Math.abs(v.x - CX) < RW/2 + 8 && Math.abs(v.y - CY) < RW/2 + 8);
+
+    if (!v.waiting && !blocked) {
+      if (dc.ax === 'y') v.y += dc.sign * spd;
+      else               v.x += dc.sign * spd;
+    }
+
+    // Çıxış
+    if (dc.ax === 'y') {
+      const ex = dc.exitY();
+      if ((dc.sign > 0 && v.y > ex) || (dc.sign < 0 && v.y < ex)) {
+        v.passed = true; totalPassed++; flowLog.push(simTime); allWaitLog.push(v.waitAcc);
+      }
+    } else {
+      const ex = dc.exitX();
+      if ((dc.sign > 0 && v.x > ex) || (dc.sign < 0 && v.x < ex)) {
+        v.passed = true; totalPassed++; flowLog.push(simTime); allWaitLog.push(v.waitAcc);
+      }
+    }
+  }
+  vehicles = vehicles.filter(v => !v.passed);
+}
+
+// ──── PİYADA YENİLƏNMƏSİ ────
+function updatePeds(dt) {
+  const s0 = simSpeed * dt * 60;
+  let anyWaiting = false;
+
+  for (const p of pedList) {
+    // Piyadalar qırmızı işıq olduqda keçə bilər
+    // Üfüqi yol qırmızı olduqda (NS_GREEN), piyadalar şaquli keçid edə bilər
+    // Şaquli yol qırmızı olduqda (EW_GREEN), piyadalar üfüqi keçid edə bilər
+    const go  = (phase === 'NS_GREEN' && p.dir === 'y') ||
+                (phase === 'EW_GREEN' && p.dir === 'x');
+    const spd = p.speed * s0;
+
+    if (p.dir === 'x') {
+      // Üfüqi zebra: y = p.fixedVal sabit, x dəyişir
+      p.y = p.fixedVal;
+
+      // Gözləmə yoxlaması: yolun kənarında, hələ yolun içinə girməyib
+      const onRoad   = (p.x > CX - RW/2 && p.x < CX + RW/2);
+      const nearEdge = p.sign > 0
+        ? (p.x < p.waitEdge + 4  && p.x > p.waitEdge - 50)
+        : (p.x > p.waitEdge - 4  && p.x < p.waitEdge + 50);
+
+      p.waiting = (!go && nearEdge && !onRoad);
+      if (p.waiting) { p.waitAcc += dt; anyWaiting = true; }
+      else           { p.x += p.sign * spd; }
+
+      // Çıxış yoxlaması
+      const done = p.sign > 0 ? (p.x > p.exitCoord + 5) : (p.x < p.exitCoord - 5);
+      if (done) { p.passed = true; totalPed++; pedWaitLog.push(p.waitAcc); }
+
+    } else {
+      // Şaquli zebra: x = p.fixedVal sabit, y dəyişir
+      p.x = p.fixedVal;
+
+      const onRoad   = (p.y > CY - RW/2 && p.y < CY + RW/2);
+      const nearEdge = p.sign > 0
+        ? (p.y < p.waitEdge + 4  && p.y > p.waitEdge - 50)
+        : (p.y > p.waitEdge - 4  && p.y < p.waitEdge + 50);
+
+      p.waiting = (!go && nearEdge && !onRoad);
+      if (p.waiting) { p.waitAcc += dt; anyWaiting = true; }
+      else           { p.y += p.sign * spd; }
+
+      const done = p.sign > 0 ? (p.y > p.exitCoord + 5) : (p.y < p.exitCoord - 5);
+      if (done) { p.passed = true; totalPed++; pedWaitLog.push(p.waitAcc); }
+    }
+  }
+
+  pedList = pedList.filter(p => !p.passed);
+
+  if (anyWaiting) pedRequestTimer += dt * simSpeed;
+  else if (!pedList.some(p => p.waiting)) pedRequestTimer = 0;
+}
+
+// ──── ÇƏKİLİŞ ────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawTerrain();
+  drawCrosswalks();
+  drawZoneHL();
+  drawLaneMarkings();
+  drawTrafficLights();
+  for (const p of pedList)  drawPed(p);
+  for (const v of vehicles) drawVeh(v);
+  drawLabels();
+  drawCamFOV();
+}
+
+function drawTerrain() {
+  // Çəmənlik
+  ctx.fillStyle = '#111a10'; ctx.fillRect(0, 0, W, H);
+  // Kaldırımlar
+  ctx.fillStyle = '#1c2a1a';
+  // Şimal kaldırımlar
+  ctx.fillRect(CX-RW/2-SW, 0,       SW,         CY-RW/2);
+  ctx.fillRect(CX+RW/2,    0,       SW,         CY-RW/2);
+  // Cənub kaldırımlar
+  ctx.fillRect(CX-RW/2-SW, CY+RW/2, SW,         H-CY-RW/2);
+  ctx.fillRect(CX+RW/2,    CY+RW/2, SW,         H-CY-RW/2);
+  // Qərb kaldırımlar
+  ctx.fillRect(0,           CY-RW/2-SW, CX-RW/2, SW);
+  ctx.fillRect(0,           CY+RW/2,    CX-RW/2, SW);
+  // Şərq kaldırımlar
+  ctx.fillRect(CX+RW/2,    CY-RW/2-SW, W-CX-RW/2, SW);
+  ctx.fillRect(CX+RW/2,    CY+RW/2,    W-CX-RW/2, SW);
+  // Künclərdə kaldırım
+  ctx.fillRect(CX-RW/2-SW, CY-RW/2-SW, SW, SW);
+  ctx.fillRect(CX+RW/2,    CY-RW/2-SW, SW, SW);
+  ctx.fillRect(CX-RW/2-SW, CY+RW/2,    SW, SW);
+  ctx.fillRect(CX+RW/2,    CY+RW/2,    SW, SW);
+  // Yollar
+  ctx.fillStyle = '#141c28';
+  ctx.fillRect(CX-RW/2, 0,       RW, H);  // Şimal-Cənub yolu
+  ctx.fillRect(0,       CY-RW/2, W,  RW); // Qərb-Şərq yolu
+  // Kəsişmə mərkəzi (bir az açıq)
+  ctx.fillStyle = '#171f2e';
+  ctx.fillRect(CX-RW/2, CY-RW/2, RW, RW);
+}
+
+function drawCrosswalks() {
+  // Şimal zebra: x=[CX-RW/2 .. CX+RW/2], y=[CY-RW/2-CW .. CY-RW/2]
+  cwStripes(CX-RW/2,    CY-RW/2-CW, RW, CW, 'v');
+  // Cənub zebra: y=[CY+RW/2 .. CY+RW/2+CW]
+  cwStripes(CX-RW/2,    CY+RW/2,    RW, CW, 'v');
+  // Qərb zebra: x=[CX-RW/2-CW .. CX-RW/2], y=[CY-RW/2 .. CY+RW/2]
+  cwStripes(CX-RW/2-CW, CY-RW/2,    CW, RW, 'h');
+  // Şərq zebra: x=[CX+RW/2 .. CX+RW/2+CW]
+  cwStripes(CX+RW/2,    CY-RW/2,    CW, RW, 'h');
+}
+
+function cwStripes(x, y, w, h, dir) {
+  ctx.fillStyle = '#1e2c40'; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = '#293d5a';
+  if (dir === 'v') {
+    for (let sx = x + 3; sx < x + w - 3; sx += 9) ctx.fillRect(sx, y, 5, h);
+  } else {
+    for (let sy = y + 3; sy < y + h - 3; sy += 9) ctx.fillRect(x, sy, w, 5);
+  }
+}
+
+function drawZoneHL() {
+  const nsG = (phase === 'NS_GREEN'), ewG = (phase === 'EW_GREEN'), pedC = (phase === 'PED_CROSS');
+  // NS zone
+  ctx.fillStyle = nsG ? 'rgba(0,255,136,.06)' : 'rgba(255,45,85,.04)';
+  ctx.fillRect(CX-RW/2, 0,       RW, CY-RW/2);
+  ctx.fillRect(CX-RW/2, CY+RW/2, RW, H-CY-RW/2);
+  // EW zone
+  ctx.fillStyle = ewG ? 'rgba(0,200,255,.06)' : 'rgba(255,45,85,.04)';
+  ctx.fillRect(0,       CY-RW/2,  CX-RW/2,     RW);
+  ctx.fillRect(CX+RW/2, CY-RW/2,  W-CX-RW/2,  RW);
+  // Ped zone
+  if (pedC) {
+    ctx.fillStyle = 'rgba(180,79,255,.10)';
+    // Şimal zebra
+    ctx.fillRect(CX-RW/2, CY-RW/2-CW, RW, CW);
+    // Cənub zebra
+    ctx.fillRect(CX-RW/2, CY+RW/2, RW, CW);
+    // Qərb zebra
+    ctx.fillRect(CX-RW/2-CW, CY-RW/2, CW, RW);
+    // Şərq zebra
+    ctx.fillRect(CX+RW/2, CY-RW/2, CW, RW);
+  }
+  // Zone borders
+  ctx.save(); ctx.setLineDash([5,5]); ctx.lineWidth = 1;
+  ctx.strokeStyle = nsG ? '#00ff88' : '#ff2d55';
+  ctx.strokeRect(CX-RW/2, 0,       RW, CY-RW/2);
+  ctx.strokeRect(CX-RW/2, CY+RW/2, RW, H-CY-RW/2);
+  ctx.strokeStyle = ewG ? '#00c8ff' : '#ff2d55';
+  ctx.strokeRect(0,       CY-RW/2, CX-RW/2,    RW);
+  ctx.strokeRect(CX+RW/2, CY-RW/2, W-CX-RW/2, RW);
+  ctx.setLineDash([]); ctx.restore();
+}
+
+function drawLaneMarkings() {
+  ctx.save();
+  ctx.strokeStyle = '#2a3a50'; ctx.lineWidth = 1; ctx.setLineDash([14,10]);
+  // NS mərkəz xətti
+  ctx.beginPath(); ctx.moveTo(CX, 0);       ctx.lineTo(CX, CY-RW/2);    ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX, CY+RW/2); ctx.lineTo(CX, H);          ctx.stroke();
+  // EW mərkəz xətti
+  ctx.beginPath(); ctx.moveTo(0, CY);       ctx.lineTo(CX-RW/2, CY);    ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX+RW/2, CY); ctx.lineTo(W, CY);          ctx.stroke();
+  ctx.setLineDash([]);
+  // Dayanma xətləri
+  ctx.strokeStyle = '#384a62'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(CX-RW/2, CY-RW/2-3); ctx.lineTo(CX,       CY-RW/2-3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX,      CY+RW/2+3); ctx.lineTo(CX+RW/2,  CY+RW/2+3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX+RW/2+3, CY-RW/2); ctx.lineTo(CX+RW/2+3, CY);       ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX-RW/2-3, CY);      ctx.lineTo(CX-RW/2-3, CY+RW/2);  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTrafficLights() {
+  const nsG = (phase==='NS_GREEN');
+  const ewG = (phase==='EW_GREEN');
+  const pedC = (phase==='PED_CROSS');
+  // 4 küncdə işıqforlar - sarı işıqsız
+  drawLB(CX-RW/2-22, CY-RW/2-22, nsG?'g':'r');
+  drawLB(CX+RW/2+6,  CY+RW/2+6,  nsG?'g':'r');
+  drawLB(CX+RW/2+6,  CY-RW/2-22, ewG?'g':'r');
+  drawLB(CX-RW/2-22, CY+RW/2+6,  ewG?'g':'r');
+  // Piyada siqnalları — hər zebrranın kaldırım tərəfindəki küncündə
+  drawPS(CX-RW/2-SW/2, CY-RW/2-CW/2, pedC);  // Şimal-Qərb
+  drawPS(CX+RW/2+SW/2, CY-RW/2-CW/2, pedC);  // Şimal-Şərq
+  drawPS(CX-RW/2-SW/2, CY+RW/2+CW/2, pedC);  // Cənub-Qərb
+  drawPS(CX+RW/2+SW/2, CY+RW/2+CW/2, pedC);  // Cənub-Şərq
+  drawPS(CX-RW/2-CW/2, CY-RW/2-SW/2, pedC);  // Qərb-Şimal
+  drawPS(CX-RW/2-CW/2, CY+RW/2+SW/2, pedC);  // Qərb-Cənub
+  drawPS(CX+RW/2+CW/2, CY-RW/2-SW/2, pedC);  // Şərq-Şimal
+  drawPS(CX+RW/2+CW/2, CY+RW/2+SW/2, pedC);  // Şərq-Cənub
+}
+
+function drawLB(x, y, st) {
+  ctx.fillStyle = '#0a1018';
+  ctx.beginPath(); ctx.roundRect(x, y, 14, 30, 3); ctx.fill();
+  ctx.strokeStyle = '#1e2d40'; ctx.lineWidth = 1; ctx.stroke();
+  const bs = [
+    {cy: y+6,  on: st==='r', oc:'#ff2d55', of:'#280010'},
+    {cy: y+15, on: st==='y', oc:'#ffcb00', of:'#281800'},
+    {cy: y+24, on: st==='g', oc:'#00ff88', of:'#002814'}
+  ];
+  for (const b of bs) {
+    if (b.on) { ctx.save(); ctx.shadowColor = b.oc; ctx.shadowBlur = 8; }
+    ctx.fillStyle = b.on ? b.oc : b.of;
+    ctx.beginPath(); ctx.arc(x+7, b.cy, 4, 0, Math.PI*2); ctx.fill();
+    if (b.on) ctx.restore();
+  }
+}
+
+function drawPS(x, y, go) {
+  ctx.save();
+  ctx.fillStyle = go ? 'rgba(180,79,255,.28)' : 'rgba(255,45,85,.18)';
+  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill();
+  ctx.font = '8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = go ? '#cc88ff' : '#ff6688';
+  ctx.fillText(go ? '🚶' : '✋', x, y);
+  ctx.restore();
+}
+
+function drawVeh(v) {
+  const dc   = DCONF[v.dir];
+  const isV  = (dc.ax === 'y');
+  const vw   = isV ? v.h : v.w;
+  const vh   = isV ? v.w : v.h;
+  ctx.save();
+  ctx.fillStyle = v.col;
+  if (!v.waiting) { ctx.shadowColor = v.col; ctx.shadowBlur = 5; }
+  ctx.beginPath(); ctx.roundRect(v.x - vw/2, v.y - vh/2, vw, vh, 2); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Şüşə
+  ctx.fillStyle = 'rgba(160,210,255,.35)';
+  ctx.beginPath(); ctx.roundRect(v.x-vw/2+2, v.y-vh/2+2, vw-4, vh-4, 1); ctx.fill();
+  // Əyləc işıqları
+  if (v.waiting) {
+    ctx.fillStyle = '#ff4444'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 7;
+    if (isV) {
+      const ly = dc.sign > 0 ? v.y-vh/2-1 : v.y+vh/2+1;
+      ctx.beginPath(); ctx.arc(v.x-vw/3, ly, 2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(v.x+vw/3, ly, 2, 0, Math.PI*2); ctx.fill();
+    } else {
+      const lx = dc.sign > 0 ? v.x-vw/2-1 : v.x+vw/2+1;
+      ctx.beginPath(); ctx.arc(lx, v.y-vh/3, 2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, v.y+vh/3, 2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+}
+
+function drawPed(p) {
+  ctx.save();
+  const col = p.waiting ? '#ffcb00' : (phase === 'PED_CROSS' ? '#b44fff' : '#e07030');
+  // Gövdə
+  ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = p.waiting ? 8 : 3;
+  ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Baş
+  ctx.fillStyle = '#f4c07a';
+  ctx.beginPath(); ctx.arc(p.x, p.y - 8, 2.5, 0, Math.PI*2); ctx.fill();
+  // Hərəkət istiqaməti
+  ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.globalAlpha = .5;
+  const ax = p.dir === 'x' ? p.sign * 9 : 0;
+  const ay = p.dir === 'y' ? p.sign * 9 : 0;
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + ax, p.y + ay); ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Gözləmə dairəsi
+  if (p.waiting) {
+    ctx.fillStyle = 'rgba(255,203,0,.12)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 13, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#ffcb00'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 13, 0, Math.PI*2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawLabels() {
+  const nsN = vehicles.filter(v=>v.dir==='N_S').length;
+  const snN = vehicles.filter(v=>v.dir==='S_N').length;
+  const ewN = vehicles.filter(v=>v.dir==='E_W').length;
+  const weN = vehicles.filter(v=>v.dir==='W_E').length;
+  lbl(CX,    12,   `${nsN} maşın`, '#0d1e2e', '#00c8ff');
+  lbl(CX,    H-12, `${snN} maşın`, '#0d1e2e', '#00c8ff');
+  lbl(14,    CY,   `${weN} maşın`, '#0d1e2e', '#00c8ff');
+  lbl(W-14,  CY,   `${ewN} maşın`, '#0d1e2e', '#00c8ff');
+
+  const pN = pedList.filter(p=>p.label==='N').length;
+  const pS = pedList.filter(p=>p.label==='S').length;
+  const pW = pedList.filter(p=>p.label==='W').length;
+  const pE = pedList.filter(p=>p.label==='E').length;
+  if (pN) lbl(CX,         CY-RW/2-CW/2, `${pN} piy`, '#1e0830', '#b44fff');
+  if (pS) lbl(CX,         CY+RW/2+CW/2, `${pS} piy`, '#1e0830', '#b44fff');
+  if (pW) lbl(CX-RW/2-CW/2, CY,         `${pW} piy`, '#1e0830', '#b44fff');
+  if (pE) lbl(CX+RW/2+CW/2, CY,         `${pE} piy`, '#1e0830', '#b44fff');
+
+  // Kəsişmə mərkəzindəki timer
+  const tc = phase.includes('GREEN') ? '#00ff88' : '#ff2d55';
+  ctx.save();
+  ctx.font = 'bold 11px Orbitron,monospace'; ctx.textAlign = 'center';
+  ctx.fillStyle = tc; ctx.shadowColor = tc; ctx.shadowBlur = 8;
+  ctx.fillText(Math.ceil(phaseTimer) + 's', CX, CY + 4);
+  ctx.shadowBlur = 0; ctx.restore();
+}
+
+function lbl(x, y, txt, bg, fg) {
+  ctx.save();
+  ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+  const tw = ctx.measureText(txt).width;
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.roundRect(x - tw/2 - 4, y - 7, tw + 8, 14, 3); ctx.fill();
+  ctx.fillStyle = fg; ctx.fillText(txt, x, y + 3);
+  ctx.restore();
+}
+
+function drawCamFOV() {
+  const corners = [
+    {x: CX-RW/2-SW/2, y: CY-RW/2-SW/2, a: 0},
+    {x: CX+RW/2+SW/2, y: CY-RW/2-SW/2, a: Math.PI/2},
+    {x: CX+RW/2+SW/2, y: CY+RW/2+SW/2, a: Math.PI},
+    {x: CX-RW/2-SW/2, y: CY+RW/2+SW/2, a: Math.PI*1.5}
+  ];
+  ctx.save();
+  for (const c of corners) {
+    ctx.strokeStyle = 'rgba(0,200,255,.12)'; ctx.lineWidth = 1; ctx.setLineDash([3,6]);
+    ctx.beginPath(); ctx.arc(c.x, c.y, 55, c.a - .6, c.a + .6); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,200,255,.5)';
+    ctx.beginPath(); ctx.arc(c.x, c.y, 3, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.setLineDash([]); ctx.restore();
+}
+
+// ──── UI YENİLƏNMƏSİ ────
+function updateUI() {
+  // İşıqfor lampları - sarı işıqsız
+  setLight('ns', phase==='NS_GREEN'?'g' : 'r');
+  setLight('ew', phase==='EW_GREEN'?'g' : 'r');
+  const pr = document.getElementById('tl-ped-r');
+  const pg = document.getElementById('tl-ped-g');
+  if (phase === 'PED_CROSS') { pr.className='tl-b off-r'; pg.className='tl-b on-g'; }
+  else                       { pr.className='tl-b on-r';  pg.className='tl-b off-g'; }
+
+  // Timer
+  const te = document.getElementById('tl-tmr');
+  const tc = phase.includes('GREEN')?'g' : 'r';
+  te.textContent = Math.ceil(phaseTimer) + 's'; te.className = 'tl-tmr ' + tc;
+  document.getElementById('tl-phase').textContent = PNAMES[phase] || phase;
+
+  const badge = document.getElementById('ai-mode-badge');
+  badge.textContent = aiMode ? 'AI-ADAPTİV' : 'ƏL İLƏ';
+  badge.className   = 'ai-badge ' + (aiMode ? 'adaptive' : 'manual');
+
+  // Sıxlıq
+  const nsN = vehicles.filter(v=>v.dir==='N_S').length;
+  const snN = vehicles.filter(v=>v.dir==='S_N').length;
+  const ewN = vehicles.filter(v=>v.dir==='E_W').length;
+  const weN = vehicles.filter(v=>v.dir==='W_E').length;
+  document.getElementById('tl-ns-cnt').textContent = nsN + snN;
+  document.getElementById('tl-ew-cnt').textContent = ewN + weN;
+  document.getElementById('tl-ped-cnt').textContent = pedList.filter(p=>p.waiting).length;
+
+  document.getElementById('density-bars').innerHTML = [
+    {l:'Şimal →', n:nsN, c:'#00ff88'}, {l:'Cənub →', n:snN, c:'#00ff88'},
+    {l:'Şərq →',  n:ewN, c:'#00c8ff'}, {l:'Qərb →',  n:weN, c:'#00c8ff'}
+  ].map(d => {
+    const pct = Math.min(100, d.n/8*100);
+    const col = pct>75 ? '#ff2d55' : pct>40 ? '#ffcb00' : d.c;
+    return `<div class="density-item"><div class="d-lbl">${d.l}</div><div class="d-bar"><div class="d-fill" style="width:${pct}%;background:${col}"></div></div><div class="d-val" style="color:${col}">${d.n}</div></div>`;
+  }).join('');
+
+  // Sayğaclar
+  document.getElementById('s-veh').textContent  = vehicles.length;
+  document.getElementById('s-ped').textContent  = pedList.length;
+  document.getElementById('s-wait').textContent = vehicles.filter(v=>v.waiting).length + pedList.filter(p=>p.waiting).length;
+  flowLog = flowLog.filter(t => simTime - t < 60);
+  document.getElementById('s-thru').textContent = flowLog.length;
+
+  // Header
+  document.getElementById('h-total').textContent = totalPassed + totalPed;
+  const sl = allWaitLog.slice(-30);
+  const avgW = sl.length > 0 ? (sl.reduce((a,b)=>a+b,0)/sl.length).toFixed(1) : 0;
+  document.getElementById('h-avg').textContent  = avgW + 's';
+  document.getElementById('h-flow').textContent = flowLog.length;
+  document.getElementById('h-eff').textContent  = Math.max(0, Math.round(100 - avgW/40*100)) + '%';
+  document.getElementById('h-ped').textContent  = totalPed;
+
+  // GPS
+  document.getElementById('gps-n').textContent    = nsN + ' maşın';
+  document.getElementById('gps-s').textContent    = snN + ' maşın';
+  document.getElementById('gps-e').textContent    = ewN + ' maşın';
+  document.getElementById('gps-w').textContent    = weN + ' maşın';
+  document.getElementById('gps-next').textContent = aiMode ? (nsN+snN >= ewN+weN ? 'N↕S' : 'E↔W') : '--';
+
+  // Piyada sensorları
+  ['N','S','E','W'].forEach((s, i) => {
+    const el  = document.getElementById(['ped-det-n','ped-det-s','ped-det-e','ped-det-w'][i]);
+    const cnt = pedList.filter(p=>p.label===s).length;
+    const wt  = pedList.filter(p=>p.label===s && p.waiting).length;
+    if (!cnt)    { el.textContent='BOŞ';             el.style.color='var(--dim2)';   }
+    else if (wt) { el.textContent=wt+' GÖZLƏYİR';   el.style.color='var(--yellow)'; }
+    else         { el.textContent=cnt+' KEÇİR';      el.style.color='var(--purple)'; }
+  });
+  document.getElementById('ped-total-wait').textContent = pedList.filter(p=>p.waiting).length;
+
+  // Faz müddətləri
+  document.getElementById('dur-ns').textContent  = nsDuration  + 's';
+  document.getElementById('dur-ew').textContent  = ewDuration  + 's';
+  document.getElementById('dur-ped').textContent = pedDuration + 's';
+}
+
+function setLight(dir, st) {
+  ['r','y','g'].forEach(c => {
+    document.getElementById(`tl-${dir}-${c}`).className = 'tl-b ' + (st === c ? `on-${c}` : `off-${c}`);
+  });
+}
+
+// ──── JURNAL ────
+function addLog(msg, type='info') {
+  const box = document.getElementById('ai-log');
+  const m = Math.floor(simTime/60), s = Math.floor(simTime%60);
+  const t = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const d = document.createElement('div');
+  d.className = 'ai-entry';
+  d.innerHTML = `<span class="ai-t">${t}</span><span class="ai-m ${type}">${msg}</span>`;
+  box.insertBefore(d, box.firstChild);
+  while (box.children.length > 25) box.removeChild(box.lastChild);
+}
+
+// ──── ƏSAS SİMULYASİYA LOOP ────
+function loop(t) {
+  if (!lastT) lastT = t;
+  const dt = Math.min((t - lastT) / 1000, 0.05);
+  lastT = t;
+  if (!simRunning) { requestAnimationFrame(loop); return; }
+
+  simTime += dt;
+  spawnT -= dt; pedSpawnT -= dt;
+
+  // Spawn
+  if (spawnT <= 0) { spawnVeh(); spawnT = 0.5 + Math.random() * 0.8; }
+  if (pedSpawnT <= 0) { spawnPed(); pedSpawnT = 0.8 + Math.random() * 1.2; }
+
+  // Update
+  updateVehicles(dt);
+  updatePeds(dt);
+  checkTrafficJam(); 
+
+  phaseTimer -= dt * simSpeed;
+  if (phaseTimer <= 0) advancePhase();
+
+  updateUI();
+  draw();
+
+  requestAnimationFrame(loop);
+}
+
+function toggleSim() {
+  simRunning = !simRunning; lastT = null;
+  document.getElementById('btn-tog').textContent  = simRunning ? '■ DAYANDIRMAQ' : '▶ BAŞLATMAQ';
+  document.getElementById('btn-tog').className    = simRunning ? 'btn act' : 'btn';
+  document.getElementById('sim-mode-lbl').textContent = simRunning ? 'CANLI' : 'DAYANDIRDI';
+  document.getElementById('sim-mode-lbl').style.color = simRunning ? 'var(--green)' : 'var(--yellow)';
+}
+function resetSim() {
+  vehicles=[]; pedList=[]; totalPassed=0; totalPed=0;
+  flowLog=[]; allWaitLog=[]; pedWaitLog=[];
+  phase='NS_GREEN'; phaseTimer=20; pedRequestTimer=0;
+  addLog('Simulyasiya sıfırlandı', 'info');
+}
+function setAIMode(on) {
+  aiMode = on;
+  document.getElementById('btn-ai').className  = 'btn ' + (on ? 'act'  : 'yellow-btn');
+  document.getElementById('btn-man').className = 'btn ' + (on ? ''     : 'act');
+  addLog(on ? 'AI-Adaptiv rejim aktivdir' : 'Əl ilə rejim aktivdir', on ? 'ok' : 'warn');
+}
+function manualPhase(p) {
+  if (aiMode) { addLog('Əl ilə keçid üçün ƏL İLƏ rejimini seçin', 'warn'); return; }
+  phase = p;
+  phaseTimer = 30;
+  addLog(`Əl ilə: ${PNAMES[p]||p}`, 'warn');
+}
+document.getElementById('spd').addEventListener('input', function() {
+  simSpeed = parseFloat(this.value);
+  document.getElementById('spd-v').textContent = simSpeed + '×';
+});
+
+// ──── BAŞLANĞIC ────
+setAIMode(true);
+addLog('AI sensoru aktiv', 'ok');
+addLog('GPS axın modulu bağlı', 'info');
+addLog('Piyada sensoru hazır', 'ped');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
